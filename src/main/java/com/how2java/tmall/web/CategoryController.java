@@ -10,7 +10,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.List;
@@ -61,6 +60,23 @@ public class CategoryController {
         File file = new File(imageFolder, id + ".jpg");
         file.delete();
         return null;
+    }
+
+    @GetMapping("categories/{id}")
+    public Category get(@PathVariable("id") int id) throws Exception {
+
+        return categoryService.get(id);
+    }
+
+    @PutMapping("categories/{id}")
+    public Object update(Category bean, MultipartFile image, HttpServletRequest request) throws Exception {
+        String name = request.getParameter("name");
+        bean.setName(name);
+        categoryService.update(bean);
+        if(image != null) {
+            saveOrUpdateImageFile(bean, image, request);
+        }
+        return bean;
     }
 
 }
