@@ -38,4 +38,8 @@ public class CategoryService {
         categoryDAO.save(category);
     }
 
+    public void delete(int id) {
+        categoryDAO.delete(id);
+    }
+
 }
