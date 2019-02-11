@@ -2,6 +2,7 @@ package com.how2java.tmall.web;
 
 import com.how2java.tmall.pojo.Product;
 import com.how2java.tmall.service.CategoryService;
+import com.how2java.tmall.service.ProductImageService;
 import com.how2java.tmall.service.ProductService;
 import com.how2java.tmall.util.Page4Navigator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,8 @@ public class ProductController {
     ProductService productService;
     @Autowired
     CategoryService categoryService;
+    @Autowired
+    ProductImageService productImageService;
 
     @GetMapping("/products/{id}")
     public Product get(@PathVariable("id") int id) throws Exception {
@@ -46,6 +49,7 @@ public class ProductController {
                                         @RequestParam(value = "size", defaultValue = "5") int size) throws Exception {
         start = start < 0? 0: start;
         Page4Navigator<Product> page = productService.list(cid, start, size, 5);
+        productImageService.setFirstProductImages(page.getContent());
         return page;
     }
 
