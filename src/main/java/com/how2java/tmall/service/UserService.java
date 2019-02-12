@@ -25,4 +25,23 @@ public class UserService {
 
     }
 
+    public void add(User bean){
+        userDAO.save(bean);
+    }
+
+    public User getByName(String name) {
+        return userDAO.findByName(name);
+    }
+
+    public boolean isExist(String name) {
+        User user = getByName(name);
+        return null != user;
+    }
+
+    public User get(String name, String password){
+
+        return userDAO.getByNameAndPassword(name, password);
+
+    }
+
 }
