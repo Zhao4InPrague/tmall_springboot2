@@ -3,6 +3,8 @@ package com.how2java.tmall.service;
 import com.how2java.tmall.dao.OrderItemDAO;
 import com.how2java.tmall.pojo.Order;
 import com.how2java.tmall.pojo.OrderItem;
+import com.how2java.tmall.pojo.Product;
+import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -44,5 +46,31 @@ public class OrderItemService {
         }
     }
 
+    public void add(OrderItem bean){
+        orderItemDAO.save(bean);
+    }
+
+    public void delete(int id) {
+        orderItemDAO.delete(id);
+    }
+
+    public OrderItem get(int id) {
+        return orderItemDAO.findOne(id);
+    }
+
+    public List<OrderItem> listByProduct(Product product) {
+        return orderItemDAO.findByProduct(product);
+    }
+
+    public int getSaleCount(Product product) {
+        List<OrderItem> orderItems = listByProduct(product);
+        int result = 0;
+        for(OrderItem orderItem: orderItems) {
+            if(orderItem.getOrder() != null && orderItem.getOrder().getPayDate() != null) {
+                result += orderItem.getNumber();
+            }
+        }
+        return result;
+    }
 
 }
