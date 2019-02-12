@@ -1,17 +1,19 @@
 package com.how2java.tmall.web;
 
 import com.how2java.tmall.pojo.*;
+
+import com.how2java.tmall.comparator.*;
 import com.how2java.tmall.service.*;
 import com.how2java.tmall.util.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.HtmlUtils;
 
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Collections;
 
 @RestController
 public class ForeRESTController {
@@ -104,6 +106,39 @@ public class ForeRESTController {
         }else {
             return Result.fail("no login");
         }
+    }
+
+    @GetMapping("forecategory/{cid}")
+    public Object category(@PathVariable("cid") int cid, String sort) {
+        Category category = categoryService.get(cid);
+        productService.fill(category);
+        productService.setSaleAndReviewNumber(category.getProducts());
+        categoryService.removeCategoryFromProduct(category);
+
+        if(null!=sort){
+            switch(sort){
+                case "review":
+                    Collections.sort(category.getProducts(),new ProductReviewComparator());
+                    break;
+                case "date" :
+                    Collections.sort(category.getProducts(),new ProductDateComparator());
+                    break;
+
+                case "saleCount" :
+                    Collections.sort(category.getProducts(),new ProductSaleCountComparator());
+                    break;
+
+                case "price":
+                    Collections.sort(category.getProducts(),new ProductPriceComparator());
+                    break;
+
+                case "all":
+                    Collections.sort(category.getProducts(),new ProductAllComparator());
+                    break;
+            }
+        }
+
+        return category;
     }
 
 }
