@@ -4,6 +4,7 @@ import com.how2java.tmall.dao.OrderItemDAO;
 import com.how2java.tmall.pojo.Order;
 import com.how2java.tmall.pojo.OrderItem;
 import com.how2java.tmall.pojo.Product;
+import com.how2java.tmall.pojo.User;
 import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -58,8 +59,16 @@ public class OrderItemService {
         return orderItemDAO.findOne(id);
     }
 
+    public void update(OrderItem bean) {
+        orderItemDAO.save(bean);
+    }
+
     public List<OrderItem> listByProduct(Product product) {
         return orderItemDAO.findByProduct(product);
+    }
+
+    public List<OrderItem> listByUser(User user) {
+        return orderItemDAO.findByUserAndOrderIsNull(user);
     }
 
     public int getSaleCount(Product product) {

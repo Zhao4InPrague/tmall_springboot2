@@ -106,6 +106,7 @@ public class ProductService {
     }
 
     public List<Product> search(String keyword, int start, int size){
+        //写了sort和pageable缺不用page4，没有很懂本来以为这些是一套的...现在很尴尬。。不是很清楚这种写法
         Sort sort = new Sort(Sort.Direction.DESC, "id");
         Pageable pageable = new PageRequest(start, size, sort);
         List<Product> products = productDAO.findByNameLike("%"+keyword+"%",pageable);

@@ -30,6 +30,8 @@ public class ForeRESTController {
     PropertyValueService propertyValueService;
     @Autowired
     ReviewService reviewService;
+    @Autowired
+    OrderItemService orderItemService;
 
     @GetMapping("/forehome")
     public Object home(){
@@ -151,6 +153,42 @@ public class ForeRESTController {
         productImageService.setFirstProductImages(products);
         productService.setSaleAndReviewNumber(products);
         return products;
+    }
+
+    private int buyoneAndAddCart(int pid, int num, HttpSession session) {
+        Product product = productService.get(pid);
+        int ooid = 0;
+        User user = (User) session.getAttribute("user");
+        boolean found = false;
+        List<OrderItem> orderItems = orderItemService.listByUser(user);
+
+        for(OrderItem orderItem: orderItems) {
+            if(orderItem.getProduct().getId() == product.getId()) {
+                orderItem.setNumber(orderItem.getNumber()+num);
+                orderItemService.update(orderItem);
+                found = true;
+                ooid = orderItem.getId();
+                break;
+            }
+        }
+
+        if(!found) {
+            OrderItem orderItem = new OrderItem();
+            orderItem.setUser(user);
+            orderItem.setProduct(product);
+            orderItem.setNumber(num);
+            orderItemService.add(orderItem);
+            ooid = orderItem.getId();
+        }
+
+        return ooid;
+    }
+
+    @GetMapping("forebuyone")
+    public Object buyone(int pid, int num, HttpSession session){
+
+        return buyoneAndAddCart(pid, num, session);
+
     }
 
 }
