@@ -5,15 +5,13 @@ import com.how2java.tmall.pojo.*;
 import com.how2java.tmall.comparator.*;
 import com.how2java.tmall.service.*;
 import com.how2java.tmall.util.Result;
+import org.omg.CORBA.PUBLIC_MEMBER;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.HtmlUtils;
 
 import javax.servlet.http.HttpSession;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Collections;
+import java.util.*;
 
 @RestController
 public class ForeRESTController {
@@ -188,6 +186,30 @@ public class ForeRESTController {
     public Object buyone(int pid, int num, HttpSession session){
 
         return buyoneAndAddCart(pid, num, session);
+
+    }
+
+    @GetMapping("forebuy")
+    public Object buy(String[] oiid, HttpSession session) {
+
+        List<OrderItem> orderItems = new ArrayList<>();
+        float total = 0;
+
+        for(String strid: oiid) {
+            int id = Integer.parseInt(strid);
+            OrderItem orderItem = orderItemService.get(id);
+            total += orderItem.getProduct().getPromotePrice()*orderItem.getNumber();
+            orderItems.add(orderItem);
+        }
+
+        productImageService.setFirstProdutImagesOnOrderItems(orderItems);
+
+        session.setAttribute("ois", orderItems);
+        Map<String, Object> map = new HashMap<>();
+        map.put("orderItems", orderItems);
+        map.put("total", total);
+
+        return Result.success(map);
 
     }
 
