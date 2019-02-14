@@ -227,4 +227,32 @@ public class ForeRESTController {
         return orderItems;
     }
 
+    @GetMapping("forechangeOrderItem")
+    public Object changeOrderItem(HttpSession session, int pid, int num) {
+        User user = (User) session.getAttribute("user");
+        if(null == user) {
+            return Result.fail("no login");
+        }
+
+        List<OrderItem> orderItems = orderItemService.listByUser(user);
+        for (OrderItem orderItem: orderItems) {
+            if(orderItem.getProduct().getId() == pid) {
+                orderItem.setNumber(num);
+                orderItemService.update(orderItem);
+                break;
+            }
+        }
+        return Result.success();
+    }
+
+    @GetMapping("foredeleteOrderItem")
+    public Object deleteOrderItem(HttpSession session, int oiid) {
+        User user = (User) session.getAttribute("user");
+        if(null == user){
+            return Result.fail("no login");
+        }
+        orderItemService.delete(oiid);
+        return Result.success();
+    }
+
 }
