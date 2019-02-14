@@ -302,4 +302,30 @@ public class ForeRESTController {
         return orders;
     }
 
+    @GetMapping("foreconfirmPay")
+    public Object confirmPay(int oid) {
+        Order order = orderService.get(oid);
+        orderItemService.fill(order);
+        orderService.cacl(order);
+        orderService.removeOrderFromOrderItem(order);
+        return order;
+    }
+
+    @GetMapping("foreorderConfirmed")
+    public Object orderConfirmed(int oid) {
+        Order order = orderService.get(oid);
+        order.setStatus(OrderService.waitReview);
+        order.setConfirmDate(new Date());
+        orderService.update(order);
+        return Result.success();
+    }
+
+    @PutMapping("foredeleteOrder")
+    public Object deleteOrder(int oid) {
+        Order order = orderService.get(oid);
+        order.setStatus(OrderService.delete);
+        orderService.update(order);
+        return Result.success();
+    }
+
 }

@@ -6,6 +6,8 @@ import com.how2java.tmall.pojo.OrderItem;
 import com.how2java.tmall.pojo.User;
 import com.how2java.tmall.util.Page4Navigator;
 import org.aspectj.weaver.ast.Or;
+import org.ietf.jgss.Oid;
+import org.omg.CORBA.ORB;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -91,5 +93,13 @@ public class OrderService {
         return orders;
     }
 
+    public void cacl(Order order) {
+        List<OrderItem> orderItems = order.getOrderItems();
+        float total = 0;
+        for (OrderItem orderItem: orderItems) {
+            total += orderItem.getProduct().getPromotePrice()* orderItem.getNumber();
+        }
+        order.setTotal(total);
+    }
 
 }
