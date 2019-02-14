@@ -291,4 +291,15 @@ public class ForeRESTController {
         return order;
     }
 
+    @GetMapping("forebought")
+    public Object bought(HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if(null == user) {
+            return Result.fail("no login");
+        }
+        List<Order> orders = orderService.listByUserWithoutDelete(user);
+        orderService.removeOrderFromOrderItem(orders);
+        return orders;
+    }
+
 }
