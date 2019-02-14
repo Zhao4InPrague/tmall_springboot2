@@ -328,4 +328,39 @@ public class ForeRESTController {
         return Result.success();
     }
 
+    @GetMapping("forereview")
+    public Object review(int oid){
+        Order order = orderService.get(oid);
+        orderItemService.fill(order);
+        orderService.removeOrderFromOrderItem(order);
+        Product product = order.getOrderItems().get(0).getProduct();
+        List<Review> reviews = reviewService.list(product);
+        productService.setSaleAndReviewNumber(product);
+        Map<String, Object> map = new HashMap<>();
+        map.put("p", product);
+        map.put("o", order);
+        map.put("review", reviews);
+
+        return Result.success(map);
+    }
+
+    @PostMapping("foredoreview")
+    public Object doreview(HttpSession session, int oid, int pid, String content){
+        Order order = orderService.get(oid);
+        order.setStatus(OrderService.finish);
+        orderService.update(order);
+
+        Product product = productService.get(pid);
+        content = HtmlUtils.htmlEscape(content);
+
+        User user = (User) session.getAttribute("user");
+        Review review = new Review();
+        review.setContent(content);
+        review.setUser(user);
+        review.setProduct(product);
+        review.setCreateDate(new Date());
+        reviewService.add(review);
+        return Result.success();
+    }
+
 }
