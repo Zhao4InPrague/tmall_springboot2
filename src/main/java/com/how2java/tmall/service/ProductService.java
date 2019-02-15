@@ -1,10 +1,14 @@
 package com.how2java.tmall.service;
 
 import com.how2java.tmall.dao.ProductDAO;
+import com.how2java.tmall.es.ProductESDAO;
 import com.how2java.tmall.pojo.Category;
 import com.how2java.tmall.pojo.Product;
 import com.how2java.tmall.util.Page4Navigator;
 import com.how2java.tmall.util.SpringContextUtil;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
+import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -13,8 +17,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.SearchQuery;
 import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,17 +37,21 @@ public class ProductService {
     OrderItemService orderItemService;
     @Autowired
     ReviewService reviewService;
+    @Autowired
+    ProductESDAO productESDAO;
 
     @CacheEvict(allEntries = true)
     public void add(Product product){
 
         productDAO.save(product);
+        productESDAO.save(product);
 
     }
 
     @CacheEvict(allEntries = true)
     public void delete(int id) {
         productDAO.delete(id);
+        productESDAO.delete(id);
     }
 
     @Cacheable(key = "'products-one-'+ #p0")
@@ -53,6 +62,7 @@ public class ProductService {
     @CacheEvict(allEntries = true)
     public void update(Product product) {
         productDAO.save(product);
+        productESDAO.save(product);
     }
 
     @Cacheable(key = "'products-cid-'+#p0+'-page-'+#p1 + '-' + #p2 ")
@@ -117,13 +127,39 @@ public class ProductService {
             setSaleAndReviewNumber(product);
         }
     }
+//原始写法
+//    public List<Product> search(String keyword, int start, int size){
+//        //写了sort和pageable缺不用page4，没有很懂本来以为这些是一套的...现在很尴尬。。不是很清楚这种写法
+//        Sort sort = new Sort(Sort.Direction.DESC, "id");
+//        Pageable pageable = new PageRequest(start, size, sort);
+//        List<Product> products = productDAO.findByNameLike("%"+keyword+"%",pageable);
+//        return products;
+//    }
+    public List<Product> search(String keyword, int start, int size) {
+        initDatabase2ES();
+        FunctionScoreQueryBuilder functionScoreQueryBuilder = QueryBuilders.functionScoreQuery()
+                .add(QueryBuilders.matchPhraseQuery("name", keyword),
+                        ScoreFunctionBuilders.weightFactorFunction(100))
+                .scoreMode("sum")
+                .setMinScore(10);
+        Sort sort  = new Sort(Sort.Direction.DESC,"id");
+        Pageable pageable = new PageRequest(start, size,sort);
+        SearchQuery searchQuery = new NativeSearchQueryBuilder()
+                .withPageable(pageable)
+                .withQuery(functionScoreQueryBuilder).build();
+        Page<Product> page = productESDAO.search(searchQuery);
+        return page.getContent();
+    }
 
-    public List<Product> search(String keyword, int start, int size){
-        //写了sort和pageable缺不用page4，没有很懂本来以为这些是一套的...现在很尴尬。。不是很清楚这种写法
-        Sort sort = new Sort(Sort.Direction.DESC, "id");
-        Pageable pageable = new PageRequest(start, size, sort);
-        List<Product> products = productDAO.findByNameLike("%"+keyword+"%",pageable);
-        return products;
+    private void initDatabase2ES() {
+        Pageable pageable = new PageRequest(0,5);//why来个0，5就查第一次的？？
+        Page<Product> page = productESDAO.findAll(pageable);
+        if(page.getContent().isEmpty()){
+            List<Product> products = productDAO.findAll();
+            for(Product product: products) {
+                productESDAO.save(product);
+            }
+        }
     }
 
 }
